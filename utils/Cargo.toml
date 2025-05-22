@@ -23,6 +23,9 @@ slog-term = "2.9.1"
 slog-scope = "4.4.0"
 slog-async = "2.8.0"
 slog-stdlog = "4.1.1"
+serde = { version = "1.0.219", features = ["derive"] }
+log = "0.4.27"
+clap = "4.5.38"
 [target.'cfg(target_os = "linux")'.dependencies]
 slog-journald = "2.2.0"
 clap = "4.5.37"
