@@ -10,7 +10,7 @@ use utils::types::LogLevel;
 
 #[derive(Parser, Debug)]
 #[command(
-    name = "rust-starter",
+    name = "rencore",
     author,
     about,
     long_about = "Rust Starter CLI",
@@ -98,13 +98,13 @@ pub fn cli_match() -> Result<()> {
             let mut app = Cli::command();
             match subcommand {
                 CompletionSubcommand::Bash => {
-                    generate(Bash, &mut app, "rust-starter", &mut std::io::stdout());
+                    generate(Bash, &mut app, "rencore", &mut std::io::stdout());
                 }
                 CompletionSubcommand::Zsh => {
-                    generate(Zsh, &mut app, "rust-starter", &mut std::io::stdout());
+                    generate(Zsh, &mut app, "rencore", &mut std::io::stdout());
                 }
                 CompletionSubcommand::Fish => {
-                    generate(Fish, &mut app, "rust-starter", &mut std::io::stdout());
+                    generate(Fish, &mut app, "rencore", &mut std::io::stdout());
                 }
             }
         }

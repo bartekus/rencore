@@ -1,6 +1,6 @@
 [package]
 name = "rencore"
-version = "1.0.0"
+version = "0.0.1"
 authors = ["Bartek Kus <7887446+bartekus@users.noreply.github.com>"]
 edition = "2021"
 repository = "https://github.com/bartekus/rencore"

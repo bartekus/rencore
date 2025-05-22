@@ -1,8 +1,8 @@
 [package]
 name = "cli"
-version = "2.0.1"
-authors = ["Abid Omar <contact@omarabid.com>"]
-description = "CLI interface for rust-starter"
+version = "0.0.1"
+authors = ["Bartek Kus <7887446+bartekus@users.noreply.github.com>"]
+description = "CLI interface for rencore"
 edition = "2021"
 
 [dependencies]
