@@ -12,7 +12,7 @@ Rust Starter aims to provide high quality components to bootstrap your Rust CLI 
 """
 
 [workspace]
-members = ["utils", "cli", "core"]
+members = ["utils", "cli", "core", "runtimes/core", "runtimes/js", "tsparser", "supervisor"]
 
 [features]
 nightly = ["utils/nightly"]
