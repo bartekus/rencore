@@ -14,13 +14,13 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install stable toolchain
-        uses: omarabid-forks/rs-toolchain@v1
+        uses: actions-rs/rs-toolchain@v1
         with:
           profile: minimal
           toolchain: stable
           override: true
 
       - name: Run cargo test
-        uses: omarabid-forks/rs-cargo@v1
+        uses: actions-rs/rs-cargo@v1
         with:
           command: test
