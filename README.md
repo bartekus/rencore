@@ -9,7 +9,7 @@
 </div>
 <br/>
 
-[![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/omarabid/rust-starter/blob/master/LICENSE) [![Gitter](https://badges.gitter.im/rust-starter/community.svg)](https://gitter.im/rust-starter/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/bartekus/rencore/blob/master/LICENSE) [![Gitter](https://badges.gitter.im/rust-starter/community.svg)](https://gitter.im/rust-starter/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![Tests](https://github.com/rust-starter/rust-starter/actions/workflows/tests.yml/badge.svg)](https://github.com/rust-starter/rust-starter/actions/workflows/tests.yml)
 [![Build](https://github.com/rust-starter/rust-starter/actions/workflows/build.yml/badge.svg)](https://github.com/rust-starter/rust-starter/actions/workflows/build.yml)
 [![codecov](https://codecov.io/gh/rust-starter/rust-starter/branch/master/graph/badge.svg)](https://codecov.io/gh/rust-starter/rust-starter)
