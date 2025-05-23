@@ -152,9 +152,11 @@ where
         // 2) Encore runtime module resolution via package.json exports
         if let Some(abs_path) = self.resolve_encore_module(target)? {
             let cleaned = abs_path.clean();
-            let file_name = FileName::Real(cleaned);
-            // Use ES module resolution; for CommonJS, switch to Resolution::CommonJS
-            return Ok(Resolution::Module(file_name));
+            return Ok(Resolution {
+                filename: FileName::Real(cleaned),
+                // No slug for custom modules
+                slug: None,
+            });
         }
 
         // 3) Fallback to inner resolver
