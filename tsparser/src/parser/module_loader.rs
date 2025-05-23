@@ -126,54 +126,53 @@ impl ModuleLoader {
         from_file: &swc_common::FileName,
         import_path: &str,
     ) -> Result<Option<Lrc<Module>>, Error> {
-        // Special case for the generated clients.
-        // TODO: Fix this to do actual import path resolution.
-        // It's a bit tricky because we can't use the resolver since the files may not exist.
+        // 1) Handle the special ~encore/* aliases
         if import_path == "~encore/clients" {
             return Ok(Some(self.encore_app_clients()));
-        } else if import_path == "~encore/auth" {
+        }
+        if import_path == "~encore/auth" {
             return Ok(Some(self.encore_auth()));
         }
 
-        let target_file_path = {
-            // TODO: cache this
-            let mod_path = self
-                .resolver
-                .resolve(from_file, import_path)
-                .map_err(|err| Error::UnableToResolve(import_path.to_string(), err))?;
-            match mod_path {
-                FileName::Real(ref buf) => {
-                    if let Some(ext) = buf.extension().and_then(OsStr::to_str) {
-                        if !MODULE_EXTENSIONS.contains(&ext) {
-                            return Ok(None);
-                        }
-                    }
+        // 2) Perform resolution (now returns Resolution)
+        let resolution = self
+            .resolver
+            .resolve(from_file, import_path)
+            .map_err(|e| Error::UnableToResolve(import_path.to_string(), e))?;
 
-                    // Check for the generated clients again, using the resolved path,
-                    // in case the "~encore/*" alias is not set up.
-                    if let Ok(suffix) = buf.strip_prefix(&self.encore_gen_root) {
-                        // Need to check for trailing slash since the resolved path
-                        // will be something like "clients/index.js".
-                        if suffix.starts_with("clients/") {
-                            return Ok(Some(self.encore_app_clients()));
-                        } else if suffix.starts_with("auth/") {
-                            return Ok(Some(self.encore_auth()));
-                        }
+        // 3) Extract the FileName
+        let file_path = match &resolution.filename {
+            FileName::Real(buf) => {
+                // only parse module extensions
+                if let Some(ext) = buf.extension().and_then(|s| s.to_str()) {
+                    if !MODULE_EXTENSIONS.contains(&ext) {
+                        return Ok(None);
                     }
-
-                    FilePath::Real(buf.clone())
                 }
-                FileName::Custom(ref str) => FilePath::Custom(str.clone()),
-                _ => return Err(Error::InvalidFilename(mod_path)),
+                // check for encore.gen prefix
+                if let Ok(suffix) = buf.strip_prefix(&self.encore_gen_root) {
+                    if suffix.starts_with("clients/") {
+                        return Ok(Some(self.encore_app_clients()));
+                    }
+                    if suffix.starts_with("auth/") {
+                        return Ok(Some(self.encore_auth()));
+                    }
+                }
+                FilePath::Real(buf.clone())
+            }
+            FileName::Custom(s) => FilePath::Custom(s.clone()),
+            other => {
+                // any other FileName variant is invalid for us
+                return Err(Error::InvalidFilename(other.clone()));
             }
         };
 
-        if let Some(module) = self.by_path.borrow().get(&target_file_path) {
-            return Ok(Some(module.clone()));
+        // 4) Dedupe: if already loaded, return it
+        if let Some(m) = self.by_path.borrow().get(&file_path) {
+            return Ok(Some(m.clone()));
         }
 
-        // Determine the module path.
-        // https://www.typescriptlang.org/docs/handbook/module-resolution.html#relative-vs-non-relative-module-imports
+        // 5) Figure out if it was a relative vs. bare import
         let module_path = if import_path.starts_with("./")
             || import_path.starts_with("../")
             || import_path.starts_with('/')
@@ -183,12 +182,13 @@ impl ModuleLoader {
             Some(import_path.to_owned())
         };
 
-        match target_file_path {
-            FilePath::Real(ref path) => self.load_fs_file(path.as_path(), module_path).map(Some),
-            FilePath::Custom(_) => self
-                .load_custom_file(target_file_path, "", module_path)
-                .map(Some),
-        }
+        // 6) Load it
+        let module = match &file_path {
+            FilePath::Real(path) => self.load_fs_file(path, module_path)?,
+            FilePath::Custom(_) => self.load_custom_file(file_path.clone(), "", module_path)?,
+        };
+
+        Ok(Some(module))
     }
 
     /// Load a file from the filesystem into the module loader.
