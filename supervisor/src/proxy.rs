@@ -4,7 +4,7 @@ use bytes::Bytes;
 use hyper::header;
 use pingora::http::ResponseHeader;
 use pingora::protocols::http::error_resp;
-use pingora::proxy::{http_proxy_service, ProxyHttp, Session};
+use pingora::proxy::{http_proxy_service, ProxyHttp, Session, FailToProxy};
 use pingora::server::configuration::{Opt, ServerConf};
 use pingora::services::Service;
 use pingora::upstreams::peer::HttpPeer;
@@ -16,38 +16,74 @@ use std::sync::Arc;
 use tokio::sync::watch;
 use tokio_util::sync::CancellationToken;
 
+/// A proxy that routes requests to various services and provides health checking capabilities
 #[derive(Clone)]
 pub struct GatewayProxy {
+    /// Map of service names to their local ports
     services: HashMap<String, u16>,
+    /// Upstream server address for proxying requests
     upstream: SocketAddr,
+    /// HTTP client for making health check requests
     client: reqwest::Client,
 }
 
+/// Represents the health status of a service or the overall system
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum HealthStatus {
+    /// Service is healthy and operating normally
+    Ok,
+    /// Service is unhealthy or experiencing issues
+    Unhealthy,
+}
+
+/// Response structure for the health check endpoint
 #[derive(Clone, Serialize, Deserialize)]
 pub struct HealthzResponse {
-    pub code: String,
+    /// Current health status of the service
+    #[serde(rename = "code")]
+    pub status: HealthStatus,
+    /// Human-readable message describing the health status
     pub message: String,
+    /// Detailed information about the service's health
     pub details: HealthzDetails,
 }
 
+/// Detailed health information about the service
 #[derive(Clone, Serialize, Deserialize)]
 pub struct HealthzDetails {
+    /// Application revision identifier
     pub app_revision: String,
+    /// Version of the Encore compiler
     pub encore_compiler: String,
+    /// Deployment identifier
     pub deploy_id: String,
+    /// Results of individual health checks
     pub checks: Vec<HealthzCheckResult>,
+    /// List of enabled experimental features
     pub enabled_experiments: Vec<String>,
 }
 
+/// Result of an individual health check
 #[derive(Clone, Serialize, Deserialize)]
 pub struct HealthzCheckResult {
+    /// Name of the health check
     pub name: String,
+    /// Whether the check passed
     pub passed: bool,
+    /// Error message if the check failed
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,
 }
 
 impl GatewayProxy {
+    /// Creates a new GatewayProxy instance
+    ///
+    /// # Arguments
+    ///
+    /// * `client` - HTTP client for making requests
+    /// * `upstream` - Address of the upstream server
+    /// * `services` - Map of service names to their local ports
     pub fn new(
         client: reqwest::Client,
         upstream: SocketAddr,
@@ -82,6 +118,7 @@ impl GatewayProxy {
                 #[cfg(unix)]
                 None,
                 rx,
+                100
             ) => {},
             _ = token.cancelled() => {
                 log::info!("Shutting down pingora proxy");
@@ -98,8 +135,8 @@ impl GatewayProxy {
             let url = format!("http://127.0.0.1:{}/__encore/healthz", port);
             tokio::spawn(async move {
                 let err_resp = || HealthzResponse {
-                    code: "unhealthy".to_string(),
-                    message: "healhtcheck failed".to_string(),
+                    status: HealthStatus::Unhealthy,
+                    message: "healthcheck failed".to_string(),
                     details: HealthzDetails {
                         app_revision: "".to_string(),
                         encore_compiler: "".to_string(),
@@ -115,14 +152,15 @@ impl GatewayProxy {
 
                 match client
                     .get(url.as_str())
+                    .timeout(std::time::Duration::from_secs(5))
                     .send()
                     .await
-                    .context("failed to get url")
+                    .context(format!("failed to get health check for service {}", svc))
                     .and_then(|r| {
                         if r.status().is_success() {
                             Ok(r)
                         } else {
-                            Err(anyhow::anyhow!("Unsuccessful request"))
+                            Err(anyhow::anyhow!("Service {} returned status {}", svc, r.status()))
                         }
                     }) {
                     Ok(res) => {
@@ -145,14 +183,14 @@ impl GatewayProxy {
             .into_iter()
             .map(|r| r.context("failed future"))
             .collect::<Result<Vec<_>>>()
-            .context("http healthcheck failed")?;
+            .context("Failed to complete health checks for all services")?;
 
         results
             .iter()
             .fold(None::<HealthzResponse>, |rtn, resp| match rtn {
                 Some(mut res) => {
-                    if resp.code != "ok" {
-                        res.code = "unhealthy".to_string();
+                    if resp.status != HealthStatus::Ok {
+                        res.status = HealthStatus::Unhealthy;
                         res.details.checks.extend(resp.details.checks.clone())
                     }
                     Some(res)
@@ -190,7 +228,7 @@ impl ProxyHttp for GatewayProxy {
             let healthz_bytes: Vec<u8> = serde_json::to_vec(&healthz_resp)
                 .or_err(ErrorType::HTTPStatus(503), "could not encode response")?;
 
-            let code = if healthz_resp.code == "ok" { 200 } else { 503 };
+            let code = if healthz_resp.status == HealthStatus::Ok { 200 } else { 503 };
             let mut header = ResponseHeader::build(code, None)?;
             header.insert_header(header::CONTENT_LENGTH, healthz_bytes.len())?;
             header.insert_header(header::CONTENT_TYPE, "application/json")?;
@@ -215,7 +253,7 @@ impl ProxyHttp for GatewayProxy {
         Ok(Box::new(peer))
     }
 
-    async fn fail_to_proxy(&self, session: &mut Session, e: &Error, _ctx: &mut Self::CTX) -> u16
+    async fn fail_to_proxy(&self, session: &mut Session, e: &Error , _ctx: &mut Self::CTX) -> FailToProxy 
     where
         Self::CTX: Send + Sync,
     {
@@ -232,7 +270,7 @@ impl ProxyHttp for GatewayProxy {
                             | ErrorType::ReadError
                             | ErrorType::ConnectionClosed => {
                                 /* conn already dead */
-                                return 0;
+                                return FailToProxy;
                             }
                             _ => 400,
                         }
