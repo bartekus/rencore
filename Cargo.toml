@@ -12,7 +12,8 @@ Rust Starter aims to provide high quality components to bootstrap your Rust CLI 
 """
 
 [workspace]
-members = ["utils", "cli", "core", "runtimes/core", "runtimes/js", "tsparser", "supervisor"]
+resolver = "2"
+members = ["utils", "cli", "core", "vendors/encore/runtimes/core", "vendors/encore/runtimes/js", "vendors/encore/tsparser", "vendors/encore/supervisor"]
 
 [features]
 nightly = ["utils/nightly"]
@@ -24,10 +25,10 @@ syslog = ["utils/syslog"]
 utils = { path = "utils" }
 cli = { path = "cli" }
 core = { path = "core" }
-encore-runtime-core = { path = "runtimes/core" }
-encore-js-runtime = { path = "runtimes/js" }
-encore-tsparser = { path = "tsparser" }
-encore-supervisor = { path = "supervisor" }
+encore-runtime-core = { path = "vendors/encore/runtimes/core" }
+encore-js-runtime = { path = "vendors/encore/runtimes/js" }
+encore-tsparser = { path = "vendors/encore/tsparser" }
+encore-supervisor = { path = "vendors/encore/supervisor" }
 human-panic = "2.0.0"
 better-panic = "0.3.0"
 log = "0.4.27"
@@ -43,6 +44,9 @@ rpath = false
 lto = false
 debug-assertions = true
 codegen-units = 4
+
+[profile.dev.package]
+insta.opt-level = 3
 
 [profile.release]
 opt-level = 3
@@ -67,3 +71,14 @@ rpath = false
 lto = true
 debug-assertions = false
 codegen-units = 1
+
+[patch.crates-io]
+tokio-postgres = { path = "vendors/encore/libs/rust-postgres/tokio-postgres"}
+postgres-protocol = { path = "vendors/encore/libs/rust-postgres/postgres-protocol"}
+swc_ecma_parser = { path = "vendors/encore/libs/swc/crates/swc_ecma_parser"}
+swc_ecma_ast = { path = "vendors/encore/libs/swc/crates/swc_ecma_ast"}
+swc_ecma_transforms_base = { path = "vendors/encore/libs/swc/crates/swc_ecma_transforms_base"}
+swc_atoms = { path = "vendors/encore/libs/swc/crates/swc_atoms"}
+swc_common = { path = "vendors/encore/libs/swc/crates/swc_common"}
+swc_ecma_loader = { path = "vendors/encore/libs/swc/crates/swc_ecma_loader"}
+swc_ecma_visit = { path = "vendors/encore/libs/swc/crates/swc_ecma_visit"}

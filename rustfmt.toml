@@ -5,6 +5,7 @@ edition = "2021"
 normalize_comments = true
 wrap_comments = false
 comment_width = 90      # small excess is okay but prefer 80
+tab_spaces = 4
 
 # Arguments:
 use_small_heuristics = "Default"
