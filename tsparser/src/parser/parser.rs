@@ -60,12 +60,12 @@ impl ParseContext {
         cm: Lrc<SourceMap>,
         errs: Lrc<Handler>,
     ) -> Result<Self> {
-        let resolver = NodeModulesResolver::with_export_conditions(
-            TargetEnv::Node,
-            Default::default(),
-            true,
-            vec!["bun".into(), "deno".into(), "types".into()],
-        );
+                // plain Node resolution; exports-based conditions will be applied in EncoreRuntimeResolver
+                let resolver = NodeModulesResolver::new(
+                    TargetEnv::Node,
+                    Default::default(),  // no path-aliases
+                    true,                // preserve symlinks
+                );
         Self::with_resolver(app_root, js_runtime_path, resolver, cm, errs)
     }
 
@@ -80,7 +80,11 @@ impl ParseContext {
         R: Resolve + 'static,
     {
         let mut resolver =
-            EncoreRuntimeResolver::new(resolver, js_runtime_path, vec!["types".into()]);
+            EncoreRuntimeResolver::new(resolver, js_runtime_path, vec![
+                "bun".into(),
+                "deno".into(),
+                "types".into(),
+            ]);
 
         // Do we have a tsconfig.json file in the app root?
         {
