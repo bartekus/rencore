@@ -1,0 +1,96 @@
+# Frontend Security Standards
+
+Standards for implementing secure frontend practices.
+
+<rule>
+name: frontend_security
+description: Enforces security best practices for frontend development
+filters:
+  # Match sensitive files
+  - type: file_extension
+    pattern: "\\.(tsx|ts)$"
+  # Match security-sensitive patterns
+  - type: content
+    pattern: "(token|auth|password|credential)"
+  # Match file modifications
+  - type: event
+    pattern: "file_modify"
+
+actions:
+  - type: enforce
+    conditions:
+      # Enforce proper token handling
+      - pattern: "localStorage\\.setItem.*token"
+        message: "Do not store tokens in localStorage, use secure storage methods"
+
+      # Enforce proper authentication checks
+      - pattern: "if\\s*\\(\\s*token\\s*\\)"
+        message: "Validate token properly before using"
+
+  - type: suggest
+    message: |
+      When implementing frontend security:
+
+      1. Authentication:
+         ```typescript
+         // Use authentication provider
+         const { isAuthenticated, getAccessToken } = useLogto();
+
+         // Protect routes
+         const ProtectedRoute = () => {
+           if (!isAuthenticated) {
+             return <Navigate to="/login" />;
+           }
+           return <Outlet />;
+         };
+         ```
+
+      2. Token Management:
+         - Never store tokens in localStorage
+         - Use secure token management (like Logto)
+         - Implement proper token refresh
+         - Clear tokens on logout
+
+      3. API Security:
+         ```typescript
+         // Always use authentication headers
+         const headers = new Headers();
+         headers.set('Authorization', `Bearer ${token}`);
+
+         // Validate responses
+         if (!response.ok) {
+           throw new ApiRequestError(error.message);
+         }
+         ```
+
+      4. Data Handling:
+         - Sanitize user inputs
+         - Validate API responses
+         - Handle errors securely
+         - Implement proper CORS policies
+
+examples:
+  - input: |
+      # Bad: Insecure token storage
+      localStorage.setItem('token', token);
+
+      # Good: Secure token handling
+      const { getAccessToken } = useLogto();
+      const token = await getAccessToken();
+
+      # Bad: Direct token usage
+      if (token) {
+        // do something
+      }
+
+      # Good: Proper authentication check
+      const { isAuthenticated } = useLogto();
+      if (isAuthenticated) {
+        // do something
+      }
+    output: "Secure frontend implementation"
+
+metadata:
+  priority: high
+  version: 1.0
+</rule>

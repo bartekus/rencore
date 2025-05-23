@@ -1,0 +1,106 @@
+---
+description: Logging Standards
+globs: *.ts
+---
+# Logging Standards
+
+Standards for implementing structured logging in Encore.ts applications.
+
+<rule>
+name: logging_standards
+description: Enforces consistent logging patterns and best practices
+filters:
+  # Match TypeScript files
+  - type: file_extension
+    pattern: "\\.ts$"
+  # Match logging statements
+  - type: content
+    pattern: "log\\.(error|warn|info|debug|trace)"
+  # Match file modifications
+  - type: event
+    pattern: "file_modify"
+
+actions:
+  - type: enforce
+    conditions:
+      # Enforce proper log import
+      - pattern: "console\\.(log|error|warn|info)"
+        message: "Use encore.dev/log instead of console logging"
+
+      # Enforce structured logging
+      - pattern: "log\\.(error|warn|info|debug|trace)\\([\"'][^,]+[\"']\\)"
+        message: "Include structured data with log messages"
+
+  - type: suggest
+    message: |
+      When implementing logging:
+
+      1. Basic Setup:
+         ```typescript
+         import log from "encore.dev/log";
+         ```
+
+      2. Log Levels:
+         - error: Critical issues requiring immediate attention
+         - warn: Warning conditions
+         - info: General information about system operation
+         - debug: Detailed information for debugging
+         - trace: Very detailed tracing information
+
+      3. Structured Logging:
+         ```typescript
+         // Basic logging with structured data
+         log.info("user action", {
+           user_id: "123",
+           action: "login",
+           method: "oauth"
+         });
+
+         // Error logging
+         log.error(err, "operation failed", {
+           operation_id: "abc",
+           status: "failed"
+         });
+
+         // Contextual logging
+         const logger = log.with({ request_id: "xyz" });
+         logger.info("processing request"); // includes request_id
+         ```
+
+      4. Best Practices:
+         - Always include relevant structured data
+         - Use appropriate log levels
+         - Create context-specific loggers
+         - Include error objects when logging errors
+         - Keep messages clear and concise
+
+examples:
+  - input: |
+      # Bad: Console logging
+      console.log("User logged in");
+
+      # Bad: Unstructured logging
+      log.info("User logged in");
+
+      # Good: Structured logging
+      log.info("user authentication", {
+        user_id: "123",
+        auth_method: "oauth",
+        success: true
+      });
+
+      # Good: Error logging
+      try {
+        // operation
+      } catch (err) {
+        log.error(err, "authentication failed", {
+          user_id: "123",
+          auth_method: "oauth"
+        });
+      }
+    output: "Proper structured logging implementation"
+
+metadata:
+  priority: high
+  version: 1.0
+</rule>

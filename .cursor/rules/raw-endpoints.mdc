@@ -1,0 +1,98 @@
+---
+description: Raw Endpoint Standards
+globs: *.ts
+---
+# Raw Endpoint Standards
+
+Standards for implementing raw HTTP endpoints in Encore.ts applications.
+
+<rule>
+name: raw_endpoints
+description: Enforces standards for raw HTTP endpoint implementations
+filters:
+  # Match TypeScript files
+  - type: file_extension
+    pattern: "\\.ts$"
+  # Match raw endpoint definitions
+  - type: content
+    pattern: "api\\.raw\\("
+  # Match file modifications
+  - type: event
+    pattern: "file_modify"
+
+actions:
+  - type: enforce
+    conditions:
+      # Enforce proper raw endpoint configuration
+      - pattern: "api\\.raw\\(\\s*\\{\\s*\\}\\s*,"
+        message: "Raw endpoints must specify method and path options"
+
+      # Enforce proper response handling
+      - pattern: "resp\\.end\\(\\)[^;]*$"
+        message: "Ensure proper response completion with content"
+
+  - type: suggest
+    message: |
+      When implementing raw HTTP endpoints:
+
+      1. Configuration Options:
+         - Specify HTTP method
+         - Define path pattern
+         - Set exposure level
+         ```typescript
+         api.raw(
+           {
+             method: "GET",
+             path: "/raw",
+             expose: true
+           },
+           async (req, resp) => {
+             // Implementation
+           }
+         );
+         ```
+
+      2. Request/Response Handling:
+         - Use Node.js/Express.js style handling
+         - Set appropriate headers
+         - Send proper response status
+         - End response with content
+
+      3. Common Use Cases:
+         - Webhook implementations
+         - Custom HTTP response formatting
+         - Direct request/response control
+         - File uploads/downloads
+
+      4. Best Practices:
+         - Handle errors appropriately
+         - Set Content-Type header
+         - Validate request data
+         - Document endpoint behavior
+
+examples:
+  - input: |
+      # Bad: Missing configuration
+      export const badEndpoint = api.raw({}, async (req, resp) => {
+        resp.end();
+      });
+
+      # Good: Complete implementation
+      export const myRawEndpoint = api.raw(
+        {
+          expose: true,
+          path: "/raw",
+          method: "GET"
+        },
+        async (req, resp) => {
+          resp.writeHead(200, { "Content-Type": "text/plain" });
+          resp.end("Hello, raw world!");
+        }
+      );
+    output: "Properly implemented raw endpoint"
+
+metadata:
+  priority: high
+  version: 1.0
+</rule>
+

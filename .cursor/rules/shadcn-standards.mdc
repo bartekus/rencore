@@ -1,0 +1,85 @@
+# Shadcn/UI Implementation Standards
+
+Standards for implementing and customizing Shadcn/UI components.
+
+<rule>
+name: shadcn_standards
+description: Enforces standards for Shadcn/UI component usage and customization
+filters:
+  # Match component files
+  - type: file_extension
+    pattern: "\\.(tsx|ts)$"
+  # Match Shadcn imports and usage
+  - type: content
+    pattern: "@radix-ui/react-.*?|@/components/ui/.*?"
+  # Match file modifications
+  - type: event
+    pattern: "file_modify"
+
+actions:
+  - type: enforce
+    conditions:
+      # Enforce proper component imports
+      - pattern: "import\\s+{.*?}\\s+from\\s+'@radix-ui/react-.*?'"
+        message: "Use Shadcn/UI components through local UI components"
+
+      # Enforce proper styling utilities
+      - pattern: "className=\\{`.*?`\\}"
+        message: "Use cn() utility for className composition"
+
+  - type: suggest
+    message: |
+      When using Shadcn/UI components:
+
+      1. Component Import Structure:
+         ```typescript
+         import { Button } from "~/components/ui/button"
+         import { Card } from "~/components/ui/card"
+         ```
+
+      2. Styling and Customization:
+         ```typescript
+         import { cn } from "~/lib/utils"
+
+         const MyComponent = ({ className, ...props }) => {
+           return (
+             <Button
+               className={cn(
+                 "custom-styles",
+                 className
+               )}
+               {...props}
+             />
+           )
+         }
+         ```
+
+      3. Theme Configuration:
+         - Use tailwind.config.js for theme customization
+         - Follow Shadcn color conventions
+         - Maintain consistent spacing scales
+
+      4. Component Organization:
+         - Keep UI components in components/ui
+         - Create composite components in features/
+         - Use consistent naming conventions
+
+examples:
+  - input: |
+      # Bad: Direct Radix import
+      import * as Dialog from '@radix-ui/react-dialog';
+
+      # Good: Shadcn component import
+      import { Dialog } from "~/components/ui/dialog";
+
+      # Bad: String concatenation
+      className={`base-class ${props.className}`}
+
+      # Good: cn utility
+      className={cn("base-class", props.className)}
+    output: "Proper Shadcn/UI implementation"
+
+metadata:
+  priority: high
+  version: 1.0
+</rule>

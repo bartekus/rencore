@@ -1,0 +1,96 @@
+---
+description: CORS Configuration Standards
+globs: *.ts, encore.app
+---
+# CORS Configuration Standards
+
+Standards for configuring Cross-Origin Resource Sharing (CORS) in Encore.ts applications.
+
+<rule>
+name: cors_config
+description: Enforces secure and proper CORS configuration patterns
+filters:
+  # Match TypeScript and config files
+  - type: file_extension
+    pattern: "\\.(ts|app)$"
+  # Match CORS configurations
+  - type: content
+    pattern: "(allow_origins|allow_headers|expose_headers)"
+  # Match file modifications
+  - type: event
+    pattern: "file_modify"
+
+actions:
+  - type: enforce
+    conditions:
+      # Enforce secure origin patterns
+      - pattern: "allow_origins_with_credentials:\\s*\\[\\s*[\"']\\*[\"']\\s*\\]"
+        message: "Wildcard (*) not allowed for credentialed requests origins"
+
+      # Enforce proper header configuration
+      - pattern: "allow_headers:\\s*\\[\\s*\\]"
+        message: "Specify required headers in allow_headers"
+
+  - type: suggest
+    message: |
+      When configuring CORS:
+
+      1. Origin Configuration:
+         ```typescript
+         {
+           // For non-credentialed requests
+           allow_origins_without_credentials: ["*"],
+
+           // For credentialed requests
+           allow_origins_with_credentials: [
+             "https://*.example.com",
+             "https://*-myapp.example.com"
+           ]
+         }
+         ```
+
+      2. Header Configuration:
+         ```typescript
+         {
+           // Additional accepted headers
+           allow_headers: ["Custom-Header"],
+
+           // Additional exposed headers
+           expose_headers: ["X-Custom-Header"]
+         }
+         ```
+
+      3. Default Behavior:
+         - Allows unauthenticated requests from all origins
+         - Disallows authenticated requests from other origins
+         - All origins allowed in local development
+
+      4. Security Best Practices:
+         - Never use wildcards with credentials
+         - Explicitly specify allowed headers
+         - Use specific origin patterns
+         - Consider environment differences
+
+examples:
+  - input: |
+      # Bad: Insecure configuration
+      {
+        allow_origins_with_credentials: ["*"]
+      }
+
+      # Good: Secure configuration
+      {
+        allow_origins_without_credentials: ["*"],
+        allow_origins_with_credentials: [
+          "https://app.example.com",
+          "https://*.example.com"
+        ],
+        allow_headers: ["Authorization", "Content-Type"],
+        expose_headers: ["X-RateLimit-Remaining"]
+      }
+    output: "Secure CORS configuration"
+
+metadata:
+  priority: high
+  version: 1.0
+</rule>

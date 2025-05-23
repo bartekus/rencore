@@ -1,0 +1,124 @@
+---
+description: Application Structure Standards
+globs: *.ts, encore.app, encore.service.ts
+---
+# Application Structure Standards
+
+Standards for organizing and structuring Encore.ts applications.
+
+<rule>
+name: application_structure
+description: Enforces proper application structure and service organization
+filters:
+  # Match TypeScript and configuration files
+  - type: file_extension
+    pattern: "\\.(ts|app)$"
+  # Match service definitions
+  - type: content
+    pattern: "new\\s+Service\\("
+  # Match file creation/modification
+  - type: event
+    pattern: "(file_create|file_modify)"
+
+actions:
+  - type: enforce
+    conditions:
+      # Enforce service file location
+      - pattern: "^(?!.*\\/encore\\.service\\.ts$).*Service\\("
+        message: "Service definitions must be in encore.service.ts files"
+
+      # Prevent nested services
+      - pattern: "\\/[^\\/]+\\/[^\\/]+\\/encore\\.service\\.ts$"
+        message: "Services cannot be nested within other services"
+
+  - type: suggest
+    message: |
+      When structuring your Encore.ts application:
+
+      1. Core Principles:
+         - Use monorepo design
+         - One Encore app for full application
+         - Support both monolith and microservices
+         - No nested services
+
+      2. Service Definition:
+         - Create encore.service.ts in service directory
+         - Export service instance using Service class
+         ```typescript
+         import { Service } from "encore.dev/service";
+         export default new Service("my-service");
+         ```
+
+      3. Service Organization:
+         ```
+         /service-name/
+         ├── database.ts       # Database configuration and connection
+         ├── schema.ts         # Database schema definitions
+         ├── drizzle.config.ts # Database tooling configuration
+         ├── service-name.interface.ts # Type definitions and interfaces
+         ├── service-name.service.ts   # Business logic layer
+         ├── service-name.controller.ts # API endpoint definitions
+         └── utils.ts          # Shared utilities
+         ```
+
+      4. Layer Separation:
+         - Controllers: Handle HTTP concerns and input validation
+         - Services: Contain business logic
+         - Interfaces: Define types and contracts
+         - Schema: Database structure
+         - Utils: Shared helper functions
+
+      5. Application Patterns:
+         a. Single Service (recommended for new projects):
+            ```
+            /my-app
+            ├── package.json
+            ├── encore.app
+            ├── encore.service.ts
+            ├── api.ts
+            └── db.ts
+            ```
+
+         b. Multi-Service:
+            ```
+            /my-app
+            ├── encore.app
+            ├── service1/
+            │   ├── migrations/
+            │   ├── encore.service.ts
+            │   └── api.ts
+            └── service2/
+                ├── encore.service.ts
+                └── api.ts
+            ```
+
+         c. Large-Scale:
+            ```
+            /my-app
+            ├── encore.app
+            ├── system1/
+            │   ├── serviceA/
+            │   └── serviceB/
+            └── system2/
+                ├── serviceC/
+                └── serviceD/
+            ```
+
+examples:
+  - input: |
+      # Bad: Nested service
+      /my-app/service1/subservice/encore.service.ts
+
+      # Bad: Wrong filename
+      /my-app/service1/service.ts
+
+      # Good: Proper service structure
+      /my-app/service1/encore.service.ts
+      import { Service } from "encore.dev/service";
+      export default new Service("service1");
+    output: "Properly structured Encore.ts application"
+
+metadata:
+  priority: high
+  version: 1.0
+</rule>

@@ -1,0 +1,127 @@
+---
+description: Logto API Integration
+source: https://logto.oitd.org/api/swagger.json
+---
+# Logto API Integration Rules
+
+<rule>
+name: logto_api_endpoints
+description: Provides autocomplete and documentation for Logto API endpoints
+filters:
+  - type: file_extension
+    pattern: "\\.(ts|tsx)$"
+  - type: content
+    pattern: "(?i)logto|auth"
+
+actions:
+  - type: suggest
+    message: |
+      ## Available Logto API Endpoints
+
+      ### Authentication
+      - POST /api/sign-in: Sign in with username and password
+      - POST /api/sign-up: Register a new user
+      - POST /api/sign-out: Sign out current user
+      - GET /api/me: Get current user info
+
+      ### Users
+      - GET /api/users: List users
+      - GET /api/users/{userId}: Get user by ID
+      - PATCH /api/users/{userId}: Update user
+      - DELETE /api/users/{userId}: Delete user
+
+      ### Applications
+      - GET /api/applications: List applications
+      - POST /api/applications: Create application
+      - GET /api/applications/{id}: Get application
+      - PATCH /api/applications/{id}: Update application
+      - DELETE /api/applications/{id}: Delete application
+
+      ### Resources
+      - GET /api/resources: List resources
+      - POST /api/resources: Create resource
+      - GET /api/resources/{id}: Get resource
+      - PATCH /api/resources/{id}: Update resource
+      - DELETE /api/resources/{id}: Delete resource
+
+examples:
+  - input: |
+      // Example API call
+      const response = await fetch('/api/users');
+    output: |
+      Available endpoints for user management:
+      GET /api/users - List all users
+      POST /api/users - Create a new user
+      GET /api/users/{userId} - Get specific user
+
+metadata:
+  priority: medium
+  version: 1.0
+</rule>
+
+<rule>
+name: logto_api_types
+description: TypeScript type definitions for Logto API responses
+filters:
+  - type: file_extension
+    pattern: "\\.ts(x)?$"
+  - type: content
+    pattern: "(?i)logto.*type|interface"
+
+actions:
+  - type: suggest
+    message: |
+      ## Common Logto API Types
+
+      ```typescript
+      interface User {
+        id: string;
+        username?: string;
+        primaryEmail?: string;
+        primaryPhone?: string;
+        name?: string;
+        avatar?: string;
+        customData?: Record<string, unknown>;
+        identities?: Record<string, Identity>;
+        lastSignInAt?: string;
+        createdAt: string;
+        updatedAt: string;
+      }
+
+      interface Identity {
+        userId: string;
+        details?: Record<string, unknown>;
+        createdAt: string;
+        updatedAt: string;
+      }
+
+      interface Application {
+        id: string;
+        name: string;
+        type: 'Native' | 'Single Page App' | 'Traditional Web';
+        description?: string;
+        oidcClientMetadata: OidcClientMetadata;
+        customClientMetadata?: Record<string, unknown>;
+        createdAt: string;
+        updatedAt: string;
+      }
+
+      interface OidcClientMetadata {
+        redirectUris: string[];
+        postLogoutRedirectUris?: string[];
+        clientUri?: string;
+        logoUri?: string;
+        scope?: string;
+      }
+      ```
+
+examples:
+  - input: |
+      interface User {
+    output: |
+      Suggested User interface from Logto API
+
+metadata:
+  priority: medium
+  version: 1.0
+</rule>

@@ -1,0 +1,78 @@
+---
+description: Corey LLM Configuration
+globs: *.ts, *.js
+---
+# Corey LLM Configuration
+
+Configuration for Corey AI assistant behavior and coding standards.
+
+<rule>
+name: corey_llm_config
+description: Defines behavior and standards for Corey AI coding assistant
+filters:
+  # Match TypeScript and JavaScript files
+  - type: file_extension
+    pattern: "\\.(ts|js)$"
+  # Match code generation events
+  - type: event
+    pattern: "file_modify"
+
+actions:
+  - type: enforce
+    conditions:
+      # Enforce ES6+ syntax
+      - pattern: "require\\("
+        message: "Use ES6 import syntax instead of require"
+      
+      # Enforce built-in fetch
+      - pattern: "import.*node-fetch"
+        message: "Use built-in fetch instead of node-fetch"
+
+  - type: suggest
+    message: |
+      When writing TypeScript/JavaScript code:
+
+      1. TypeScript Standards:
+         - Use interface or type definitions for complex objects
+         - Prefer TypeScript's built-in utility types (e.g., Record, Partial, Pick) over any
+         - Ensure proper type safety throughout the codebase
+
+      2. Node.js Standards:
+         - Use ES6+ syntax
+         - Use built-in `fetch` for HTTP requests
+         - Use Node.js `import`, never use `require`
+         - Target Node.js v20+ features
+
+      3. Encore.ts Defaults:
+         - Use Encore.ts for backend development unless specified otherwise
+         - Follow Encore.ts best practices for API endpoints and services
+         - Ensure type-safe request/response handling
+
+      4. Development Approach:
+         - Think through problems before implementation
+         - Work iteratively towards solutions
+         - Optimize for maintainability and efficiency
+
+examples:
+  - input: |
+      # Bad: Old-style imports
+      const fetch = require('node-fetch');
+      
+      # Good: Modern syntax
+      import { api } from "encore.dev/api";
+      
+      # Bad: Any type
+      function process(data: any): any {
+      
+      # Good: Proper typing
+      interface ProcessData {
+        id: string;
+        value: number;
+      }
+      function process(data: ProcessData): ProcessResult {
+    output: "Code following Corey's standards"
+
+metadata:
+  priority: high
+  version: 1.0
+</rule> 

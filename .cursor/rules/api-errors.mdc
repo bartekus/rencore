@@ -1,0 +1,118 @@
+---
+description: API Error Handling Standards
+globs: *.ts
+---
+# API Error Handling Standards
+
+Standards for handling and throwing API errors in Encore.ts applications.
+
+<rule>
+name: api_errors
+description: Enforces consistent API error handling patterns
+filters:
+  # Match TypeScript files
+  - type: file_extension
+    pattern: "\\.ts$"
+  # Match error handling code
+  - type: content
+    pattern: "(throw|catch|APIError|ErrCode)"
+  # Match file modifications
+  - type: event
+    pattern: "file_modify"
+
+actions:
+  - type: enforce
+    conditions:
+      # Enforce proper error imports
+      - pattern: "throw\\s+new\\s+Error\\("
+        message: "Use APIError for API error handling"
+
+      # Enforce proper error code usage
+      - pattern: "new\\s+APIError\\([^,]*\\)"
+        message: "APIError must include both error code and message"
+
+  - type: suggest
+    message: |
+      When handling API errors:
+
+      1. Error Format:
+         ```json
+         {
+           "code": "error_code",
+           "message": "human readable message",
+           "details": null
+         }
+         ```
+
+      2. Implementation:
+         ```typescript
+         import { APIError, ErrCode } from "encore.dev/api";
+
+         // Standard way
+         throw new APIError(ErrCode.NotFound, "resource not found");
+
+         // Shorthand
+         throw APIError.notFound("resource not found");
+         ```
+
+      3. Service-Level Error Handling:
+         ```typescript
+         // Custom error classes
+         export class UserNotFoundError extends Error {
+           constructor(id: number) {
+             super(`User with id ${id} not found`);
+           }
+         }
+
+         // Controller error handling
+         try {
+           const result = await UserService.findOne(id);
+           return result;
+         } catch (error) {
+           throw APIError.aborted(error?.toString() || "Error getting user data");
+         }
+         ```
+
+      4. Response Structure:
+         ```typescript
+         interface Response {
+           success: boolean;
+           message?: string;
+           result?: T;
+         }
+         ```
+
+      5. Common Error Codes:
+         - NotFound (404): Resource doesn't exist
+         - InvalidArgument (400): Invalid input
+         - PermissionDenied (403): Lacks permission
+         - Internal (500): Server error
+         - Unavailable (503): Service unavailable
+         - AlreadyExists (409): Resource conflict
+         - Unauthenticated (401): Not authenticated
+
+      6. Best Practices:
+         - Use descriptive error messages
+         - Include relevant error details
+         - Maintain consistent error patterns
+         - Handle errors at appropriate levels
+
+examples:
+  - input: |
+      # Bad: Generic error
+      throw new Error("something went wrong");
+
+      # Bad: Missing message
+      throw new APIError(ErrCode.NotFound);
+
+      # Good: Complete error
+      throw new APIError(ErrCode.NotFound, "user not found");
+
+      # Good: Shorthand method
+      throw APIError.notFound("user not found");
+    output: "Proper API error handling"
+
+metadata:
+  priority: high
+  version: 1.0
+</rule>
