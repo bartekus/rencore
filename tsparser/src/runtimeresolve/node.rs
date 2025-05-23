@@ -10,7 +10,7 @@ use clean_path::Clean;
 use serde::Deserialize;
 use swc_common::sync::Lrc;
 use swc_common::FileName;
-use swc_ecma_loader::resolve::Resolve;
+use swc_ecma_loader::resolve::{Resolve, Resolution};
 
 use crate::runtimeresolve::exports::Exports;
 use crate::runtimeresolve::tsconfig::TsConfigPathResolver;
@@ -140,16 +140,24 @@ impl<R> Resolve for EncoreRuntimeResolver<R>
 where
     R: Resolve,
 {
-    fn resolve(&self, base: &FileName, target: &str) -> Result<FileName, Error> {
+    /// Custom SWC resolver: TS-config aliases → Encore runtime exports → fallback to inner
+    fn resolve(&self, base: &FileName, target: &str) -> Result<Resolution, Error> {
+        // 1) TS-config path aliases
         if let Some(tsconfig) = &self.tsconfig_resolver {
             if let Some(buf) = tsconfig.resolve(target) {
                 return self.inner.resolve(tsconfig.base(), buf.as_ref());
             }
         }
 
-        match self.resolve_encore_module(target)? {
-            Some(buf) => Ok(FileName::Real(buf.clean())),
-            None => self.inner.resolve(base, target),
+        // 2) Encore runtime module resolution via package.json exports
+        if let Some(abs_path) = self.resolve_encore_module(target)? {
+            let cleaned = abs_path.clean();
+            let file_name = FileName::Real(cleaned);
+            // Use ES module resolution; for CommonJS, switch to Resolution::CommonJS
+            return Ok(Resolution::Module(file_name));
         }
+
+        // 3) Fallback to inner resolver
+        self.inner.resolve(base, target)
     }
 }
