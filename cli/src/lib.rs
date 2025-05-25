@@ -47,6 +47,18 @@ pub struct Cli {
 #[derive(Subcommand, Debug)]
 enum Commands {
     #[clap(
+        name = "bundle",
+        about = "Bundle TypeScript/JavaScript entrypoints",
+        long_about = None,
+    )]
+    Bundle {
+        #[clap(short, long, value_name = "ENTRYPOINT")]
+        entrypoint: PathBuf,
+        #[clap(short, long, value_name = "OUTDIR")]
+        outdir: PathBuf,
+        // ... any other options ...
+    },
+    #[clap(
         name = "hazard",
         about = "Generate a hazardous occurance",
         long_about = None, 
@@ -99,6 +111,8 @@ pub fn cli_match() -> Result<()> {
 
     // Execute the subcommand
     match &cli.command {
+        Commands::Bundle { entrypoint, outdir } => commands::bundle(entrypoint, outdir)?,
+        // Commands::Run { watch, listen, port, json, namespace, color, debug, browser } => commands::run(watch, listen, port, json, namespace, color, debug, browser)?,
         Commands::Hazard => commands::hazard()?,
         Commands::Error => commands::simulate_error()?,
         Commands::Completion { subcommand } => {

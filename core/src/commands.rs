@@ -4,6 +4,21 @@ use super::hazard;
 use utils::app_config::AppConfig;
 use utils::error::Result;
 
+
+pub fn bundle(entrypoint: &Path, outdir: &Path) -> Result<()> {
+    let status = std::process::Command::new("tsbundler-encore")
+        .arg("--bundle")
+        .arg("--engine=node:21")
+        .arg(format!("--outdir={}", outdir.display()))
+        .arg(entrypoint)
+        .status()?;
+    if !status.success() {
+        return Err(anyhow::anyhow!("Bundling failed"));
+    }
+    println!("Bundling succeeded!");
+    Ok(())
+}
+
 /// Show the configuration file
 pub fn hazard() -> Result<()> {
     // Generate, randomly, True or False
