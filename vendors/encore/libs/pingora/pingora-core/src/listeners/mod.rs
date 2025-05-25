@@ -15,21 +15,42 @@
 //! The listening endpoints (TCP and TLS) and their configurations.
 
 mod l4;
-mod tls;
 
-use crate::protocols::Stream;
+#[cfg(feature = "any_tls")]
+pub mod tls;
+
+#[cfg(not(feature = "any_tls"))]
+pub use crate::tls::listeners as tls;
+
+use crate::protocols::{tls::TlsRef, Stream};
+
 #[cfg(unix)]
 use crate::server::ListenFds;
 
+use async_trait::async_trait;
 use pingora_error::Result;
 use std::{fs::Permissions, sync::Arc};
 
 use l4::{ListenerEndpoint, Stream as L4Stream};
-use tls::Acceptor;
+use tls::{Acceptor, TlsSettings};
 
-pub use crate::protocols::ssl::server::TlsAccept;
+pub use crate::protocols::tls::ALPN;
 pub use l4::{ServerAddress, TcpSocketOptions};
-pub use tls::{TlsSettings, ALPN};
+
+/// The APIs to customize things like certificate during TLS server side handshake
+#[async_trait]
+pub trait TlsAccept {
+    // TODO: return error?
+    /// This function is called in the middle of a TLS handshake. Structs who
+    /// implement this function should provide tls certificate and key to the
+    /// [TlsRef] via `ssl_use_certificate` and `ssl_use_private_key`.
+    /// Note. This is only supported for openssl and boringssl
+    async fn certificate_callback(&self, _ssl: &mut TlsRef) -> () {
+        // does nothing by default
+    }
+}
+
+pub type TlsAcceptCallbacks = Box<dyn TlsAccept + Send + Sync>;
 
 struct TransportStackBuilder {
     l4: ServerAddress,
@@ -201,6 +222,7 @@ impl Listeners {
 #[cfg(test)]
 mod test {
     use super::*;
+    #[cfg(feature = "any_tls")]
     use tokio::io::AsyncWriteExt;
     use tokio::net::TcpStream;
     use tokio::time::{sleep, Duration};
@@ -234,6 +256,7 @@ mod test {
     }
 
     #[tokio::test]
+    #[cfg(feature = "any_tls")]
     async fn test_listen_tls() {
         use tokio::io::AsyncReadExt;
 

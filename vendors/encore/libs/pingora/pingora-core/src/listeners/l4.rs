@@ -157,19 +157,17 @@ fn apply_tcp_socket_options(sock: &TcpSocket, opt: Option<&TcpSocketOptions>) ->
             .set_only_v6(ipv6_only)
             .or_err(BindError, "failed to set IPV6_V6ONLY")?;
     }
+    #[cfg(unix)]
+    let raw = sock.as_raw_fd();
+    #[cfg(windows)]
+    let raw = sock.as_raw_socket();
 
     if let Some(backlog) = opt.tcp_fastopen {
-        #[cfg(unix)]
-        set_tcp_fastopen_backlog(sock.as_raw_fd(), backlog)?;
-        #[cfg(windows)]
-        set_tcp_fastopen_backlog(sock.as_raw_socket(), backlog)?;
+        set_tcp_fastopen_backlog(raw, backlog)?;
     }
 
     if let Some(dscp) = opt.dscp {
-        #[cfg(unix)]
-        set_dscp(sock.as_raw_fd(), dscp)?;
-        #[cfg(windows)]
-        set_dscp(sock.as_raw_socket(), dscp)?;
+        set_dscp(raw, dscp)?;
     }
     Ok(())
 }
@@ -392,13 +390,7 @@ mod test {
     async fn test_listen_uds() {
         let addr = "/tmp/test_listen_uds";
         let mut listener = ListenerEndpoint::new(ServerAddress::Uds(addr.into(), None));
-        listener
-            .listen(
-                #[cfg(unix)]
-                None,
-            )
-            .await
-            .unwrap();
+        listener.listen(None).await.unwrap();
         tokio::spawn(async move {
             // just try to accept once
             listener.accept().await.unwrap();

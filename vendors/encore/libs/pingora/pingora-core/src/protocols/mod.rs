@@ -18,7 +18,7 @@ mod digest;
 pub mod http;
 pub mod l4;
 pub mod raw_connect;
-pub mod ssl;
+pub mod tls;
 #[cfg(windows)]
 mod windows;
 
@@ -27,23 +27,23 @@ pub use digest::{
     TimingDigest,
 };
 pub use l4::ext::TcpKeepalive;
-pub use ssl::ALPN;
+pub use tls::ALPN;
 
 use async_trait::async_trait;
 use std::fmt::Debug;
 use std::net::{IpAddr, Ipv4Addr};
 use std::sync::Arc;
 
+#[cfg(unix)]
+pub type UniqueIDType = i32;
+#[cfg(windows)]
+pub type UniqueIDType = usize;
+
 /// Define how a protocol should shutdown its connection.
 #[async_trait]
 pub trait Shutdown {
     async fn shutdown(&mut self) -> ();
 }
-
-#[cfg(unix)]
-pub type UniqueIDType = i32;
-#[cfg(windows)]
-pub type UniqueIDType = usize;
 
 /// Define how a given session/connection identifies itself.
 pub trait UniqueID {
@@ -55,19 +55,29 @@ pub trait UniqueID {
 /// Interface to get TLS info
 pub trait Ssl {
     /// Return the TLS info if the connection is over TLS
-    fn get_ssl(&self) -> Option<&crate::tls::ssl::SslRef> {
+    fn get_ssl(&self) -> Option<&TlsRef> {
         None
     }
 
-    /// Return the [`ssl::SslDigest`] for logging
-    fn get_ssl_digest(&self) -> Option<Arc<ssl::SslDigest>> {
+    /// Return the [`tls::SslDigest`] for logging
+    fn get_ssl_digest(&self) -> Option<Arc<tls::SslDigest>> {
         None
     }
 
     /// Return selected ALPN if any
     fn selected_alpn_proto(&self) -> Option<ALPN> {
-        let ssl = self.get_ssl()?;
-        ALPN::from_wire_selected(ssl.selected_alpn_protocol()?)
+        None
+    }
+}
+
+/// The ability peek data before consuming it
+#[async_trait]
+pub trait Peek {
+    /// Peek data but not consuming it. This call should block until some data
+    /// is sent.
+    /// Return `false` if peeking is not supported/allowed.
+    async fn try_peek(&mut self, _buf: &mut [u8]) -> std::io::Result<bool> {
+        Ok(false)
     }
 }
 
@@ -84,6 +94,7 @@ pub trait IO:
     + GetTimingDigest
     + GetProxyDigest
     + GetSocketDigest
+    + Peek
     + Unpin
     + Debug
     + Send
@@ -104,6 +115,7 @@ impl<
             + GetTimingDigest
             + GetProxyDigest
             + GetSocketDigest
+            + Peek
             + Unpin
             + Debug
             + Send
@@ -154,6 +166,8 @@ mod ext_io_impl {
         }
     }
 
+    impl Peek for Mock {}
+
     use std::io::Cursor;
 
     #[async_trait]
@@ -181,6 +195,7 @@ mod ext_io_impl {
             None
         }
     }
+    impl<T> Peek for Cursor<T> {}
 
     use tokio::io::DuplexStream;
 
@@ -209,12 +224,15 @@ mod ext_io_impl {
             None
         }
     }
+
+    impl Peek for DuplexStream {}
 }
 
 #[cfg(unix)]
 pub(crate) trait ConnFdReusable {
     fn check_fd_match<V: AsRawFd>(&self, fd: V) -> bool;
 }
+
 #[cfg(windows)]
 pub(crate) trait ConnSockReusable {
     fn check_sock_match<V: AsRawSocket>(&self, sock: V) -> bool;
@@ -230,6 +248,8 @@ use std::os::unix::prelude::AsRawFd;
 use std::os::windows::io::AsRawSocket;
 use std::{net::SocketAddr as InetSocketAddr, path::Path};
 
+use crate::protocols::tls::TlsRef;
+
 #[cfg(unix)]
 impl ConnFdReusable for SocketAddr {
     fn check_fd_match<V: AsRawFd>(&self, fd: V) -> bool {
@@ -242,6 +262,7 @@ impl ConnFdReusable for SocketAddr {
         }
     }
 }
+
 #[cfg(windows)]
 impl ConnSockReusable for SocketAddr {
     fn check_sock_match<V: AsRawSocket>(&self, sock: V) -> bool {

@@ -14,8 +14,6 @@
 
 //! Listeners
 
-use crate::protocols::digest::{GetSocketDigest, SocketDigest};
-use crate::protocols::l4::stream::Stream;
 use std::io;
 #[cfg(unix)]
 use std::os::unix::io::AsRawFd;
@@ -24,6 +22,9 @@ use std::os::windows::io::AsRawSocket;
 use tokio::net::TcpListener;
 #[cfg(unix)]
 use tokio::net::UnixListener;
+
+use crate::protocols::digest::{GetSocketDigest, SocketDigest};
+use crate::protocols::l4::stream::Stream;
 
 /// The type for generic listener for both TCP and Unix domain socket
 #[derive(Debug)]

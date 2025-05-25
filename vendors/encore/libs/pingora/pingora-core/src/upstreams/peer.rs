@@ -31,15 +31,15 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
 
-use crate::connectors::L4Connect;
+use crate::connectors::{l4::BindTo, L4Connect};
 use crate::protocols::l4::socket::SocketAddr;
+use crate::protocols::tls::CaType;
 #[cfg(unix)]
 use crate::protocols::ConnFdReusable;
 use crate::protocols::TcpKeepalive;
-use crate::tls::x509::X509;
-use crate::utils::{get_organization_unit, CertKey};
+use crate::utils::tls::{get_organization_unit, CertKey};
 
-pub use crate::protocols::ssl::ALPN;
+pub use crate::protocols::tls::ALPN;
 
 /// The interface to trace the connection
 pub trait Tracing: Send + Sync + std::fmt::Debug {
@@ -70,7 +70,7 @@ pub trait Peer: Display + Clone {
     fn tls(&self) -> bool;
     /// The SNI to send, if TLS is used
     fn sni(&self) -> &str;
-    /// To decide whether a [`Peer`] can use the connection established by another [`Peer`].
+    /// To decide whether a [`Peer`] can use the connection established by another [`Peer`].
     ///
     /// The connections to two peers are considered reusable to each other if their reuse hashes are
     /// the same
@@ -113,8 +113,8 @@ pub trait Peer: Display + Clone {
             None => None,
         }
     }
-    /// Which local source address this connection should be bind to.
-    fn bind_to(&self) -> Option<&InetSocketAddr> {
+    /// Information about the local source address this connection should be bound to.
+    fn bind_to(&self) -> Option<&BindTo> {
         match self.get_peer_options() {
             Some(opt) => opt.bind_to.as_ref(),
             None => None,
@@ -148,7 +148,7 @@ pub trait Peer: Display + Clone {
     /// Get the CA cert to use to validate the server cert.
     ///
     /// If not set, the default CAs will be used.
-    fn get_ca(&self) -> Option<&Arc<Box<[X509]>>> {
+    fn get_ca(&self) -> Option<&Arc<CaType>> {
         match self.get_peer_options() {
             Some(opt) => opt.ca.as_ref(),
             None => None,
@@ -193,6 +193,7 @@ pub trait Peer: Display + Clone {
     fn matches_fd<V: AsRawFd>(&self, fd: V) -> bool {
         self.address().check_fd_match(fd)
     }
+
     #[cfg(windows)]
     fn matches_sock<V: AsRawSocket>(&self, sock: V) -> bool {
         use crate::protocols::ConnSockReusable;
@@ -253,7 +254,7 @@ impl Peer for BasicPeer {
         !self.sni.is_empty()
     }
 
-    fn bind_to(&self) -> Option<&InetSocketAddr> {
+    fn bind_to(&self) -> Option<&BindTo> {
         None
     }
 
@@ -304,7 +305,7 @@ impl Scheme {
 /// See [`Peer`] for the meaning of the fields
 #[derive(Clone, Debug)]
 pub struct PeerOptions {
-    pub bind_to: Option<InetSocketAddr>,
+    pub bind_to: Option<BindTo>,
     pub connection_timeout: Option<Duration>,
     pub total_connection_timeout: Option<Duration>,
     pub read_timeout: Option<Duration>,
@@ -315,11 +316,10 @@ pub struct PeerOptions {
     /* accept the cert if it's CN matches the SNI or this name */
     pub alternative_cn: Option<String>,
     pub alpn: ALPN,
-    pub ca: Option<Arc<Box<[X509]>>>,
+    pub ca: Option<Arc<CaType>>,
     pub tcp_keepalive: Option<TcpKeepalive>,
     pub tcp_recv_buf: Option<usize>,
     pub dscp: Option<u8>,
-    pub no_header_eos: bool,
     pub h2_ping_interval: Option<Duration>,
     // how many concurrent h2 stream are allowed in the same connection
     pub max_h2_streams: usize,
@@ -355,7 +355,6 @@ impl PeerOptions {
             tcp_keepalive: None,
             tcp_recv_buf: None,
             dscp: None,
-            no_header_eos: false,
             h2_ping_interval: None,
             max_h2_streams: 1,
             extra_proxy_headers: BTreeMap::new(),
@@ -375,7 +374,7 @@ impl PeerOptions {
 
 impl Display for PeerOptions {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        if let Some(b) = self.bind_to {
+        if let Some(b) = self.bind_to.as_ref() {
             write!(f, "bind_to: {:?},", b)?;
         }
         if let Some(t) = self.connection_timeout {
@@ -406,9 +405,6 @@ impl Display for PeerOptions {
         }
         if let Some(tcp_keepalive) = &self.tcp_keepalive {
             write!(f, "tcp_keepalive: {},", tcp_keepalive)?;
-        }
-        if self.no_header_eos {
-            write!(f, "no_header_eos: true,")?;
         }
         if let Some(h2_ping_interval) = self.h2_ping_interval {
             write!(f, "h2_ping_interval: {:?},", h2_ping_interval)?;
@@ -571,6 +567,7 @@ impl Peer for HttpPeer {
             self.address().check_fd_match(fd)
         }
     }
+
     #[cfg(windows)]
     fn matches_sock<V: AsRawSocket>(&self, sock: V) -> bool {
         use crate::protocols::ConnSockReusable;

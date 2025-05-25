@@ -35,7 +35,7 @@ pub mod listening;
 pub trait Service: Sync + Send {
     /// This function will be called when the server is ready to start the service.
     ///
-    /// - `fds`: a collection of listening file descriptors. During zero downtime restart
+    /// - `fds` (Unix only): a collection of listening file descriptors. During zero downtime restart
     /// the `fds` would contain the listening sockets passed from the old service, services should
     /// take the sockets they need to use then. If the sockets the service looks for don't appear in
     /// the collection, the service should create its own listening sockets and then put them into

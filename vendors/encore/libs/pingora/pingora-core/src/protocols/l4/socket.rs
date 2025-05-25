@@ -222,6 +222,7 @@ impl std::str::FromStr for SocketAddr {
             }
         }
     }
+
     #[cfg(windows)]
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let addr = StdSockAddr::from_str(s).or_err(crate::BindError, "invalid socket addr")?;
