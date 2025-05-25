@@ -314,7 +314,7 @@ impl Session {
             downstream_session: downstream_session.into(),
             cache: HttpCache::new(),
             // disable both upstream and downstream compression
-            upstream_compression: ResponseCompressionCtx::new(0, false),
+            upstream_compression: ResponseCompressionCtx::new(0, false, false),
             ignore_downstream_range: false,
             subrequest_ctx: None,
             downstream_modules_ctx: downstream_modules.build_ctx(),
