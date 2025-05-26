@@ -1,5 +1,5 @@
 [package]
-name = "rencore"
+name = "rencore-cli"
 version = "0.0.1"
 authors = ["Bartek Kus <7887446+bartekus@users.noreply.github.com>"]
 edition = "2021"
@@ -12,8 +12,7 @@ Rust Starter aims to provide high quality components to bootstrap your Rust CLI 
 """
 
 [workspace]
-resolver = "2"
-members = ["utils", "cli", "core", "vendors/encore/runtimes/core", "vendors/encore/runtimes/js", "vendors/encore/tsparser", "vendors/encore/supervisor"]
+members = ["utils", "cli", "core"]
 
 [features]
 nightly = ["utils/nightly"]
@@ -25,14 +24,13 @@ syslog = ["utils/syslog"]
 utils = { path = "utils" }
 cli = { path = "cli" }
 core = { path = "core" }
-encore-runtime-core = { path = "vendors/encore/runtimes/core" }
-encore-js-runtime = { path = "vendors/encore/runtimes/js" }
-encore-tsparser = { path = "vendors/encore/tsparser" }
-encore-supervisor = { path = "vendors/encore/supervisor" }
+#encore-runtime-core = { path = "vendors/encore/runtimes/core" }
+#encore-js-runtime = { path = "vendors/encore/runtimes/js" }
+#encore-tsparser = { path = "vendors/encore/tsparser" }
+#encore-supervisor = { path = "vendors/encore/supervisor" }
 human-panic = "2.0.0"
 better-panic = "0.3.0"
 log = "0.4.27"
-ahash = "0.8.12"
 
 [dev-dependencies]
 assert_cmd = "2.0.17"
@@ -45,9 +43,6 @@ rpath = false
 lto = false
 debug-assertions = true
 codegen-units = 4
-
-[profile.dev.package]
-insta.opt-level = 3
 
 [profile.release]
 opt-level = 3
@@ -72,27 +67,3 @@ rpath = false
 lto = true
 debug-assertions = false
 codegen-units = 1
-
-[patch.crates-io]
-tokio-postgres = { path = "vendors/encore/libs/rust-postgres/tokio-postgres", version = "0.7.10" }
-postgres-protocol = { path = "vendors/encore/libs/rust-postgres/postgres-protocol", version = "0.6.6"}
-swc_ecma_parser = { path = "vendors/encore/libs/swc/crates/swc_ecma_parser", version = "0.141.21"}
-swc_ecma_ast = { path = "vendors/encore/libs/swc/crates/swc_ecma_ast", version = "0.110.9"}
-swc_ecma_transforms_base = { path = "vendors/encore/libs/swc/crates/swc_ecma_transforms_base", version = "0.134.30"}
-swc_atoms = { path = "vendors/encore/libs/swc/crates/swc_atoms", version = "0.6.4"}
-swc_common = { path = "vendors/encore/libs/swc/crates/swc_common", version = "0.33.8"}
-swc_ecma_loader = { path = "vendors/encore/libs/swc/crates/swc_ecma_loader", version = "0.45.9"}
-swc_ecma_visit = { path = "vendors/encore/libs/swc/crates/swc_ecma_visit", version = "0.96.9"}
-pingora-proxy = { path = "vendors/encore/libs/pingora/pingora-proxy", version = "0.4"}
-
-[workspace.dependencies]
-tokio = "1"
-async-trait = "0.1.42"
-httparse = "1"
-bytes = "1.0"
-http = "1.0.0"
-log = "0.4"
-h2 = ">=0.4.6"
-once_cell = "1"
-lru = "0"
-ahash = ">=0.8.9"

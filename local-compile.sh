@@ -28,6 +28,14 @@ mkdir ./target/release/runtimes/go || true &&
 mkdir ./target/release/runtimes/js || true &&
 mkdir ./target/release/runtimes/js/encore.dev || true &&
 
+
+echo "Copying runtimes..."
+cp -r "./vendors/encore/runtimes/core" "./target/release/runtimes/" &&
+cp -r "./vendors/encore/runtimes/go" "./target/release/runtimes/go/" &&
+cp -r "./vendors/encore/runtimes/js/encore.dev" "./target/release/runtimes/js/encore.dev/" &&
+cp "./vendors/encore/runtimes/js/encore-runtime.node" "./target/release/runtimes/js/" &&
+echo "✅ Runtimes successfully copied."
+
 ## Create encore binary and other Go binaries
 #echo "Creating encore binary..."
 #go build ./cli/cmd/encore &&
@@ -47,9 +55,3 @@ mkdir ./target/release/runtimes/js/encore.dev || true &&
 #chmod +x ./target/release/tsbundler-encore &&
 #echo "✅ tsbundler-encore binary successfully built."
 
-echo "Copying runtimes..."
-cp -r "./vendors/encore/runtimes/core" "./target/release/runtimes/" &&
-cp -r "./vendors/encore/runtimes/go" "./target/release/runtimes/go/" &&
-cp -r "./vendors/encore/runtimes/js/encore.dev" "./target/release/runtimes/js/encore.dev/" &&
-cp "./vendors/encore/runtimes/js/encore-runtime.node" "./target/release/runtimes/js/" &&
-echo "✅ Runtimes successfully copied."
