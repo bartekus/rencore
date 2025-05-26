@@ -10,7 +10,7 @@ set -euo pipefail
 #echo "Building encore local binary..."
 #go run ./pkg/encorebuild/cmd/build-local-binary/ all
 #echo "✅ Encore local binary successfully built."
-rm -rf ./target
+#rm -rf ./target
 
 echo "Creating encore js runtimes..."
 (cd vendors/encore/runtimes/js && cargo zigbuild --release --jobs 6)
@@ -21,20 +21,20 @@ echo "Building TypeScript parser..."
 (cd vendors/encore/tsparser && cargo zigbuild --release --jobs 6)
 echo "✅ TypeScript parser successfully built."
 
-mkdir ./target/release/bin || true &&
-mkdir ./target/release/runtimes || true &&
-mkdir ./target/release/runtimes/core || true &&
-mkdir ./target/release/runtimes/go || true &&
-mkdir ./target/release/runtimes/js || true &&
-mkdir ./target/release/runtimes/js/encore.dev || true &&
-
-
-echo "Copying runtimes..."
-cp -r "./vendors/encore/runtimes/core" "./target/release/runtimes/" &&
-cp -r "./vendors/encore/runtimes/go" "./target/release/runtimes/go/" &&
-cp -r "./vendors/encore/runtimes/js/encore.dev" "./target/release/runtimes/js/encore.dev/" &&
-cp "./vendors/encore/runtimes/js/encore-runtime.node" "./target/release/runtimes/js/" &&
-echo "✅ Runtimes successfully copied."
+#mkdir ./target/release/bin || true &&
+#mkdir ./target/release/runtimes || true &&
+#mkdir ./target/release/runtimes/core || true &&
+#mkdir ./target/release/runtimes/go || true &&
+#mkdir ./target/release/runtimes/js || true &&
+#mkdir ./target/release/runtimes/js/encore.dev || true &&
+#
+#
+#echo "Copying runtimes..."
+#cp -r "./vendors/encore/runtimes/core" "./target/release/runtimes/" &&
+#cp -r "./vendors/encore/runtimes/go" "./target/release/runtimes/go/" &&
+#cp -r "./vendors/encore/runtimes/js/encore.dev" "./target/release/runtimes/js/encore.dev/" &&
+#cp "./vendors/encore/runtimes/js/encore-runtime.node" "./target/release/runtimes/js/" &&
+#echo "✅ Runtimes successfully copied."
 
 ## Create encore binary and other Go binaries
 #echo "Creating encore binary..."
