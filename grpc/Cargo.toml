@@ -6,11 +6,12 @@ description = "The application grpc code"
 edition = "2021"
 
 [dependencies]
-utils = { path = "../utils" }
 rand = "0.9.1"
 log = "0.4.27"
-prost = "0.12"
-prost-derive = "0.12"
+prost = "0.13"
+prost-derive = "0.13"
+prost-types = "0.13"
+prost-build = "0.13"
 tokio = { version = "1.37", features = ["full"] }
 tonic = "0.12"
 tonic-web = "0.12"
@@ -49,9 +50,3 @@ required-features = ["grpc-web"]
 name = "grpc-web-client"
 path = "src/client.rs"
 required-features = ["grpc-web"]
-
-[patch.crates-io]
-prost = "=0.12.6"
-prost-derive = "=0.12.6"
-prost-types = "=0.12.6"
-prost-build = "=0.12.6"
