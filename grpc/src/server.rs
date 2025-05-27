@@ -1,49 +1,53 @@
-use tonic::{service::LayerExt as _, transport::Server, Request, Response, Status};
+use tonic::{transport::Server, Request, Response, Status};
+use encore::daemon::daemon_server::{Daemon, DaemonServer};
+use encore::daemon::{CheckRequest, CommandMessage};
 
-use hello_world::greeter_server::{Greeter, GreeterServer};
-use hello_world::{HelloReply, HelloRequest};
-
-pub mod hello_world {
-    tonic::include_proto!("helloworld");
+pub mod encore {
+    pub mod daemon {
+        tonic::include_proto!("encore.daemon");
+    }
 }
 
 #[derive(Default)]
-pub struct MyGreeter {}
+pub struct MyDaemon {}
 
 #[tonic::async_trait]
-impl Greeter for MyGreeter {
-    async fn say_hello(
-        &self,
-        request: Request<HelloRequest>,
-    ) -> Result<Response<HelloReply>, Status> {
-        println!("Got a request from {:?}", request.remote_addr());
+impl Daemon for MyDaemon {
+    type CheckStream = tokio_stream::wrappers::ReceiverStream<Result<CommandMessage, Status>>;
 
-        let reply = hello_world::HelloReply {
-            message: format!("Hello {}!", request.into_inner().name),
+    async fn check(
+        &self,
+        request: Request<CheckRequest>,
+    ) -> Result<Response<Self::CheckStream>, Status> {
+        println!("Check called with: {:?}", request);
+
+        // Example: send a single CommandMessage and close the stream
+        let (tx, rx) = tokio::sync::mpsc::channel(4);
+        let msg = CommandMessage {
+            msg: Some(encore::daemon::command_message::Msg::Output(
+                encore::daemon::CommandOutput {
+                    stdout: b"Check completed successfully\n".to_vec(),
+                    stderr: vec![],
+                },
+            )),
         };
-        Ok(Response::new(reply))
+        tx.send(Ok(msg)).await.unwrap();
+
+        Ok(Response::new(tokio_stream::wrappers::ReceiverStream::new(rx)))
     }
+
+    // Implement other methods as needed...
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tracing_subscriber::fmt::init();
+    let addr = "127.0.0.1:50051".parse().unwrap();
+    let daemon = MyDaemon::default();
 
-    let addr = "127.0.0.1:3000".parse().unwrap();
-
-    let greeter = MyGreeter::default();
-    let greeter = tower::ServiceBuilder::new()
-        .layer(tower_http::cors::CorsLayer::new())
-        .layer(tonic_web::GrpcWebLayer::new())
-        .into_inner()
-        .named_layer(GreeterServer::new(greeter));
-
-    println!("GreeterServer listening on {addr}");
+    println!("DaemonServer listening on {addr}");
 
     Server::builder()
-        // GrpcWeb is over http1 so we must enable it.
-        .accept_http1(true)
-        .add_service(greeter)
+        .add_service(DaemonServer::new(daemon))
         .serve(addr)
         .await?;
 

@@ -1,29 +1,34 @@
-use hello_world::{greeter_client::GreeterClient, HelloRequest};
+use encore::daemon::daemon_client::DaemonClient;
+use encore::daemon::CheckRequest;
 use hyper_util::rt::TokioExecutor;
 use tonic_web::GrpcWebClientLayer;
 
-pub mod hello_world {
-    tonic::include_proto!("helloworld");
+pub mod encore {
+    pub mod daemon {
+        tonic::include_proto!("encore.daemon");
+    }
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Must use hyper directly...
-    let client = hyper_util::client::legacy::Client::builder(TokioExecutor::new()).build_http();
+    // Connect to the daemon server (adjust the address as needed)
+    let mut client = DaemonClient::connect("http://[::1]:50051").await?;
 
-    let svc = tower::ServiceBuilder::new()
-        .layer(GrpcWebClientLayer::new())
-        .service(client);
-
-    let mut client = GreeterClient::with_origin(svc, "http://127.0.0.1:3000".try_into()?);
-
-    let request = tonic::Request::new(HelloRequest {
-        name: "Tonic".into(),
+    // Example: Send a CheckRequest
+    let request = tonic::Request::new(CheckRequest {
+        app_root: "/path/to/app".to_string(),
+        working_dir: ".".to_string(),
+        codegen_debug: false,
+        parse_tests: false,
+        environ: vec![],
     });
 
-    let response = client.say_hello(request).await?;
+    let mut response = client.check(request).await?.into_inner();
 
-    println!("RESPONSE={response:?}");
+    // Stream the responses
+    while let Some(msg) = response.message().await? {
+        println!("Received: {:?}", msg);
+    }
 
     Ok(())
 }
