@@ -14,7 +14,7 @@
     "vitest": "^1.5.0"
   },
   "dependencies": {
-    "encore.dev": "^1.35.3"
+    "encore.dev": "file:/opt/homebrew/Cellar/encore/dev/libexec/runtimes/js/encore.dev"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.13.0"
