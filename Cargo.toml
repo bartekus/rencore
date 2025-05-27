@@ -24,10 +24,7 @@ syslog = ["utils/syslog"]
 utils = { path = "utils" }
 cli = { path = "cli" }
 core = { path = "core" }
-#encore-runtime-core = { path = "vendors/encore/runtimes/core" }
-#encore-js-runtime = { path = "vendors/encore/runtimes/js" }
-#encore-tsparser = { path = "vendors/encore/tsparser" }
-#encore-supervisor = { path = "vendors/encore/supervisor" }
+
 human-panic = "2.0.0"
 better-panic = "0.3.0"
 log = "0.4.27"

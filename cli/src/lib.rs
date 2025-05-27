@@ -85,6 +85,18 @@ enum Commands {
         long_about = None,
     )]
     Config,
+    #[clap(
+        name = "run",
+        about = "Run the application",
+        long_about = None,
+    )]
+    Run {
+        #[clap(short, long, value_name = "WATCH")]
+        watch: bool,
+        #[clap(short, long, value_name = "PORT")]
+        port: Option<u16>,
+        // ... other options ...
+    },
 }
 
 #[derive(Subcommand, PartialEq, Debug)]
@@ -130,7 +142,13 @@ pub fn cli_match() -> Result<()> {
             }
         }
         Commands::Config => commands::config()?,
+        Commands::Run { watch, port } => commands::run(watch, port)?,
     }
 
+    Ok(())
+}
+
+pub fn run(watch: bool, port: Option<u16>) -> Result<()> {
+    // Your logic here
     Ok(())
 }

@@ -6,6 +6,22 @@ use utils::error::Result;
 use std::path::Path;
 
 pub fn bundle(entrypoint: &Path, outdir: &Path) -> Result<()> {
+    let status = std::process::Command::new("tsbundler-encore")
+        .arg("--bundle")
+        .arg("--engine=node:21")
+        .arg(format!("--outdir={}", outdir.display()))
+        .arg(entrypoint)
+        .status()?;
+    
+    if !status.success() {
+        error!("Error: Bundling failed");
+    }
+    
+    println!("Bundling succeeded!");
+    Ok(())
+}
+
+pub fn run(watch: &bool, port: &Option<u16>) -> Result<()> {
     // let status = std::process::Command::new("tsbundler-encore")
     //     .arg("--bundle")
     //     .arg("--engine=node:21")
@@ -15,7 +31,7 @@ pub fn bundle(entrypoint: &Path, outdir: &Path) -> Result<()> {
     // if !status.success() {
     //     return Err(anyhow::anyhow!("Bundling failed"));
     // }
-    println!("Bundling succeeded!");
+    println!("Running succeeded!");
     Ok(())
 }
 
