@@ -1,6 +1,6 @@
 use tonic::{transport::Server, Request, Response, Status};
-use encore::daemon::daemon_server::{Daemon, DaemonServer};
-use encore::daemon::{CheckRequest, CommandMessage};
+use self::encore::daemon::daemon_server::{Daemon, DaemonServer};
+use self::encore::daemon::{CheckRequest, CommandMessage};
 
 pub mod encore {
     pub mod daemon {
@@ -33,133 +33,133 @@ impl Daemon for MyDaemon {
         &self,
         _request: Request<encore::daemon::RunRequest>,
     ) -> Result<Response<Self::RunStream>, Status> {
-        unimplemented!()
+        Err(Status::unimplemented("not implemented"))
     }
 
     async fn test(
         &self,
         _request: Request<encore::daemon::TestRequest>,
     ) -> Result<Response<Self::TestStream>, Status> {
-        unimplemented!()
+        Err(Status::unimplemented("not implemented"))
     }
 
     async fn test_spec(
         &self,
         _request: Request<encore::daemon::TestSpecRequest>,
     ) -> Result<Response<encore::daemon::TestSpecResponse>, Status> {
-        unimplemented!()
+        Err(Status::unimplemented("not implemented"))
     }
 
     async fn exec_script(
         &self,
         _request: Request<encore::daemon::ExecScriptRequest>,
     ) -> Result<Response<Self::ExecScriptStream>, Status> {
-        unimplemented!()
+        Err(Status::unimplemented("not implemented"))
     }
 
     async fn export(
         &self,
         _request: Request<encore::daemon::ExportRequest>,
     ) -> Result<Response<Self::ExportStream>, Status> {
-        unimplemented!()
+        Err(Status::unimplemented("not implemented"))
     }
 
     async fn db_connect(
         &self,
         _request: Request<encore::daemon::DbConnectRequest>,
     ) -> Result<Response<encore::daemon::DbConnectResponse>, Status> {
-        unimplemented!()
+        Err(Status::unimplemented("not implemented"))
     }
 
     async fn db_proxy(
         &self,
         _request: Request<encore::daemon::DbProxyRequest>,
     ) -> Result<Response<Self::DBProxyStream>, Status> {
-        unimplemented!()
+        Err(Status::unimplemented("not implemented"))
     }
 
     async fn db_reset(
         &self,
         _request: Request<encore::daemon::DbResetRequest>,
     ) -> Result<Response<Self::DBResetStream>, Status> {
-        unimplemented!()
+        Err(Status::unimplemented("not implemented"))
     }
 
     async fn gen_client(
         &self,
         _request: Request<encore::daemon::GenClientRequest>,
     ) -> Result<Response<encore::daemon::GenClientResponse>, Status> {
-        unimplemented!()
+        Err(Status::unimplemented("not implemented"))
     }
 
     async fn gen_wrappers(
         &self,
         _request: Request<encore::daemon::GenWrappersRequest>,
     ) -> Result<Response<encore::daemon::GenWrappersResponse>, Status> {
-        unimplemented!()
+        Err(Status::unimplemented("not implemented"))
     }
 
     async fn secrets_refresh(
         &self,
         _request: Request<encore::daemon::SecretsRefreshRequest>,
     ) -> Result<Response<encore::daemon::SecretsRefreshResponse>, Status> {
-        unimplemented!()
+        Err(Status::unimplemented("not implemented"))
     }
 
     async fn version(
         &self,
         _request: Request<()>,
     ) -> Result<Response<encore::daemon::VersionResponse>, Status> {
-        unimplemented!()
+        Err(Status::unimplemented("not implemented"))
     }
 
     async fn create_namespace(
         &self,
         _request: Request<encore::daemon::CreateNamespaceRequest>,
     ) -> Result<Response<encore::daemon::Namespace>, Status> {
-        unimplemented!()
+        Err(Status::unimplemented("not implemented"))
     }
 
     async fn switch_namespace(
         &self,
         _request: Request<encore::daemon::SwitchNamespaceRequest>,
     ) -> Result<Response<encore::daemon::Namespace>, Status> {
-        unimplemented!()
+        Err(Status::unimplemented("not implemented"))
     }
 
     async fn list_namespaces(
         &self,
         _request: Request<encore::daemon::ListNamespacesRequest>,
     ) -> Result<Response<encore::daemon::ListNamespacesResponse>, Status> {
-        unimplemented!()
+        Err(Status::unimplemented("not implemented"))
     }
 
     async fn delete_namespace(
         &self,
         _request: Request<encore::daemon::DeleteNamespaceRequest>,
     ) -> Result<Response<()>, Status> {
-        unimplemented!()
+        Err(Status::unimplemented("not implemented"))
     }
 
     async fn dump_meta(
         &self,
         _request: Request<encore::daemon::DumpMetaRequest>,
     ) -> Result<Response<encore::daemon::DumpMetaResponse>, Status> {
-        unimplemented!()
+        Err(Status::unimplemented("not implemented"))
     }
 
     async fn telemetry(
         &self,
         _request: Request<encore::daemon::TelemetryConfig>,
     ) -> Result<Response<()>, Status> {
-        unimplemented!()
+        Err(Status::unimplemented("not implemented"))
     }
 
     async fn create_app(
         &self,
         _request: Request<encore::daemon::CreateAppRequest>,
     ) -> Result<Response<encore::daemon::CreateAppResponse>, Status> {
-        unimplemented!()
+        Err(Status::unimplemented("not implemented"))
     }
 }
 
