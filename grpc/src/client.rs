@@ -1,5 +1,5 @@
-use encore::daemon::daemon_client::DaemonClient;
-use encore::daemon::CheckRequest;
+use self::encore::daemon::daemon_client::DaemonClient;
+use self::encore::daemon::CheckRequest;
 
 pub mod encore {
     pub mod daemon {
