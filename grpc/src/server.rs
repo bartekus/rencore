@@ -26,7 +26,21 @@ impl Daemon for MyDaemon {
         &self,
         request: Request<CheckRequest>,
     ) -> Result<Response<Self::CheckStream>, Status> {
-        // ... your existing implementation ...
+        println!("Check called with: {:?}", request);
+
+        // Example: send a single CommandMessage and close the stream
+        let (tx, rx) = tokio::sync::mpsc::channel(4);
+        let msg = CommandMessage {
+            msg: Some(encore::daemon::command_message::Msg::Output(
+                encore::daemon::CommandOutput {
+                    stdout: b"Check completed successfully\n".to_vec(),
+                    stderr: vec![],
+                },
+            )),
+        };
+        tx.send(Ok(msg)).await.unwrap();
+
+        Ok(Response::new(tokio_stream::wrappers::ReceiverStream::new(rx)))
     }
 
     async fn run(
@@ -163,33 +177,6 @@ impl Daemon for MyDaemon {
     }
 }
 
-// #[tonic::async_trait]
-// impl Daemon for MyDaemon {
-//     type CheckStream = tokio_stream::wrappers::ReceiverStream<Result<CommandMessage, Status>>;
-// 
-//     async fn check(
-//         &self,
-//         request: Request<CheckRequest>,
-//     ) -> Result<Response<Self::CheckStream>, Status> {
-//         println!("Check called with: {:?}", request);
-// 
-//         // Example: send a single CommandMessage and close the stream
-//         let (tx, rx) = tokio::sync::mpsc::channel(4);
-//         let msg = CommandMessage {
-//             msg: Some(encore::daemon::command_message::Msg::Output(
-//                 encore::daemon::CommandOutput {
-//                     stdout: b"Check completed successfully\n".to_vec(),
-//                     stderr: vec![],
-//                 },
-//             )),
-//         };
-//         tx.send(Ok(msg)).await.unwrap();
-// 
-//         Ok(Response::new(tokio_stream::wrappers::ReceiverStream::new(rx)))
-//     }
-// 
-//     // Implement other methods as needed...
-// }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

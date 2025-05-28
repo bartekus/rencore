@@ -1,7 +1,5 @@
 use encore::daemon::daemon_client::DaemonClient;
 use encore::daemon::CheckRequest;
-use hyper_util::rt::TokioExecutor;
-use tonic_web::GrpcWebClientLayer;
 
 pub mod encore {
     pub mod daemon {
