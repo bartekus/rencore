@@ -107,3 +107,15 @@ impl From<log::SetLoggerError> for Error {
         }
     }
 }
+
+impl From<tonic::Status> for Error {
+    fn from(status: tonic::Status) -> Self {
+        Error::msg(status.to_string())
+    }
+}
+
+impl From<tonic::transport::Error> for Error {
+    fn from(err: tonic::transport::Error) -> Self {
+        Error::msg(err.to_string())
+    }
+}

@@ -32,7 +32,7 @@ pub async fn check_command(codegen_debug: bool, parse_tests: bool) -> Result<()>
     // 5. Send request and stream output
     let mut stream = client.check(request).await?.into_inner();
     while let Some(msg) = stream.next().await {
-        handle_output(msg)?;
+        handle_output(msg?)?;
     }
 
     // 6. Exit with appropriate code
