@@ -1,6 +1,14 @@
 use tonic::{transport::Server, Request, Response, Status};
-use self::encore::daemon::daemon_server::{Daemon, DaemonServer};
-use self::encore::daemon::{CheckRequest, CommandMessage};
+// use self::encore::daemon::daemon_server::{Daemon, DaemonServer};
+// use self::encore::daemon::{CheckRequest, CommandMessage};
+
+use self::encore::daemon::daemon_client::DaemonClient;
+use self::encore::daemon::CheckRequest;
+use self::encore::daemon::CommandMessage;
+
+use self::encore::daemon::daemon_server::Daemon;
+use self::encore::daemon::daemon_server::DaemonServer;
+
 
 pub mod encore {
     pub mod daemon {

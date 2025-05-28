@@ -1,7 +1,6 @@
 use std::env;
-use std::fs;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::{PathBuf};
 
 pub fn find_app_root() -> io::Result<(PathBuf, PathBuf)> {
     let mut dir = env::current_dir()?;

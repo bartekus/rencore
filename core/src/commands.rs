@@ -6,6 +6,8 @@ use utils::app_config::AppConfig;
 use utils::error::Result;
 use std::path::Path;
 
+use grpc::encore::daemon::CheckRequest;
+
 pub fn check_command(codegen_debug: bool, parse_tests: bool) -> Result<()> {
     // 1. Find app root and rel path
     let (app_root, rel_path) = find_app_root()?;
