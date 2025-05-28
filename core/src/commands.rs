@@ -8,7 +8,7 @@ use std::path::Path;
 use futures_util::StreamExt;
 use grpc::encore::daemon::CheckRequest;
 
-pub async fn check_command(codegen_debug: bool, parse_tests: bool) -> Result<()> {
+pub async fn check(codegen_debug: bool, parse_tests: bool) -> Result<()> {
     // 1. Find app root and rel path
     let (app_root, rel_path) = find_app_root()?;
 
