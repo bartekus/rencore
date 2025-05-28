@@ -47,6 +47,17 @@ pub struct Cli {
 #[derive(Subcommand, Debug)]
 enum Commands {
     #[clap(
+        name = "check",
+        about = "Check the application using the daemon",
+        long_about = None,
+    )]
+    Check {
+        #[clap(long, help = "Enable codegen debug")]
+        codegen_debug: bool,
+        #[clap(long, help = "Parse tests")]
+        parse_tests: bool,
+    },
+    #[clap(
         name = "bundle",
         about = "Bundle TypeScript/JavaScript entrypoints",
         long_about = None,
@@ -123,6 +134,12 @@ pub fn cli_match() -> Result<()> {
 
     // Execute the subcommand
     match &cli.command {
+        Commands::Check { codegen_debug, parse_tests } => {
+            // Run the async check function using a runtime
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            rt.block_on(commands::check(*codegen_debug, *parse_tests))?;
+        },
+        
         Commands::Bundle { entrypoint, outdir } => commands::bundle(entrypoint, outdir)?,
         // Commands::Run { watch, listen, port, json, namespace, color, debug, browser } => commands::run(watch, listen, port, json, namespace, color, debug, browser)?,
         Commands::Hazard => commands::hazard()?,

@@ -9,6 +9,7 @@ edition = "2021"
 utils = { path = "../utils" }
 core = { path = "../core" }
 clap_complete = "4.5.50"
+tokio = { version = "1.37", features = ["full"] }
 
 [dependencies.clap]
 version = "4.5.37"
